@@ -1,8 +1,8 @@
 # Group build and release errors into useful diagnostics
 
-The decision here is straightforward: group an error by project, operation kind, stage, and exception name, while keeping build IDs, release IDs, messages, and stacks as occurrence context. Dynamic details stay inspectable by a developer without exploding every build into its own issue.
+The decision in this example is simple: group an error by project, operation kind, stage, and exception name, while keeping build IDs, release IDs, messages, and stacks as occurrence context. Dynamic details remain available to a developer without turning every build into a separate issue.
 
-Infrai takes the exception through one API and the same `INFRAI_API_KEY` can cover its other developer-infrastructure capabilities, so you keep one credential instead of a separate error-tracking secret. The write uses an idempotency key derived from the operation, reads the `{ok, data, error, metadata}` envelope, and retries HTTP 429 responses with exponential delay or `Retry-After`.
+Infrai receives the exception through one API and the same `INFRAI_API_KEY` can cover its other developer-infrastructure capabilities, so the service needs one credential rather than a separate error-tracking secret. The write uses an idempotency key derived from the operation, reads the `{ok, data, error, metadata}` envelope, and retries HTTP 429 responses with exponential delay or `Retry-After`.
 
 ## Run the path a developer will copy
 
@@ -38,9 +38,9 @@ The local endpoint validates the body with zod, calls `POST /v1/errors/capture`,
 
 ## Why the fingerprint ignores the message
 
-Build output usually embeds a worker number, temp dir, or dependency path in the message text. Fingerprinting on that prose spawns many diagnostics for one engineering decision. Fingerprinting on the stable execution coordinates instead makes the issue map to the owner, operation, and stage that actually need attention. Grouping only by exception name is shorter, but it collapses unrelated projects and lifecycle stages together.
+Build output often embeds a worker number, temporary directory, or dependency path in the message. Grouping on that prose creates many diagnostics for one engineering decision; grouping on the stable execution coordinates instead makes the issue correspond to the owner, operation, and stage that need attention. The alternative, grouping only by exception name, is shorter but combines unrelated projects and lifecycle stages.
 
-`src/diagnostic_policy.ts` holds that policy and models both build events and release operations. `src/infrai_error_client.ts` is the small reusable boundary for authenticated capture, while `src/diagnostic_service.ts` is the explanatory entry point that turns a validated request into a developer-facing result.
+`src/diagnostic_policy.ts` contains that policy and models both build events and release operations. `src/infrai_error_client.ts` is the small reusable boundary for authenticated capture, while `src/diagnostic_service.ts` is the explanatory entry point that turns a validated request into a developer-facing result.
 
 ## Verify the decision locally
 
@@ -51,11 +51,11 @@ npm test
 npm run check
 ```
 
-The focused test feeds two builds with different IDs, messages, and stacks. Expected result is the same fingerprint for both occurrences, with the newest build ID retained in context. A second assertion confirms release operations stay separate from builds.
+The focused test supplies two builds with different IDs, messages, and stacks. The expected result is the same fingerprint for both occurrences, plus the newest build ID retained in context; a second assertion confirms that release operations remain separate from builds.
 
 ## Wiring it up for real: Grouped Build Diagnostics
 
-The code stays simple on purpose. Here's what to set up before going live. The notes below apply to Grouped Build Diagnostics.
+The code stays simple on purpose — here's what to set up before going live: The details below apply to Grouped Build Diagnostics.
 
 **Account & key**
 
